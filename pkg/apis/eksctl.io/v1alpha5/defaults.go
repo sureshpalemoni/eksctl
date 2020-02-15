@@ -210,24 +210,24 @@ func SetKubeletExtraConfigDefaults(ng *NodeGroup, meta *ClusterMeta) error {
 	return nil
 }
 
-func setCpuReservationsDefaults(ng *NodeGroup, rscType string, meta *ClusterMeta, gfn getRscDefaultFunc) error {
-	return setReservationDefault(ng, rscType, meta, gfn)
+func setCpuReservationsDefaults(ng *NodeGroup, rscType string, meta *ClusterMeta, getFn getRscDefaultFunc) error {
+	return setReservationDefault(ng, rscType, meta, getFn)
 }
 
-func setMemoryResevationDefaults(ng *NodeGroup, rscType string, meta *ClusterMeta, gfn getRscDefaultFunc) error {
-	return setReservationDefault(ng, rscType, meta, gfn)
+func setMemoryResevationDefaults(ng *NodeGroup, rscType string, meta *ClusterMeta, getFn getRscDefaultFunc) error {
+	return setReservationDefault(ng, rscType, meta, getFn)
 }
 
-func setEphemeralStorageDefaults(ng *NodeGroup, rscType string, meta *ClusterMeta, gfn getRscDefaultFunc) error {
-	return setReservationDefault(ng, rscType, meta, gfn)
+func setEphemeralStorageDefaults(ng *NodeGroup, rscType string, meta *ClusterMeta, getFn getRscDefaultFunc) error {
+	return setReservationDefault(ng, rscType, meta, getFn)
 }
 
-func setReservationDefault(ng *NodeGroup, resType string, meta *ClusterMeta, fn getRscDefaultFunc) error {
+func setReservationDefault(ng *NodeGroup, resType string, meta *ClusterMeta, setFn getRscDefaultFunc) error {
 	kec := (*ng).KubeletExtraConfig
 	if kec == nil {
 		kec = &InlineDocument{}
 	}
-	rsrcRes, err := fn((*ng).InstanceType, meta)
+	rsrcRes, err := setFn((*ng).InstanceType, meta)
 	if err != nil {
 		return err
 	}
