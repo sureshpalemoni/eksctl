@@ -188,13 +188,13 @@ type getRscDefaultFunc func(string, *ClusterMeta) (string, error)
 type setRscDefaultFunc func(*NodeGroup, string, *ClusterMeta, getRscDefaultFunc) error
 
 type rscParamSet struct {
-	setFun  setRscDefaultFunc `json: "setFun,omitEmpty"`
-	getFun  getRscDefaultFunc `json: "getFun,omitEmpty"`
-	rscType string            `json: "rscType,omitEmpty"`
+	setFun  setRscDefaultFunc
+	getFun  getRscDefaultFunc
+	rscType string
 }
 
 var rscParams = []rscParamSet{
-	{setFun: setCpuReservationsDefaults, getFun: getCpuReservations, rscType: "cpu"},
+	{setFun: setCPUReservationDefaults, getFun: getCPUReservations, rscType: "cpu"},
 	{setFun: setMemoryResevationDefaults, getFun: getMemReservations, rscType: "memory"},
 	{setFun: setEphemeralStorageDefaults, getFun: getEphemeralStorageReservations, rscType: "ephemeral-storage"},
 }
@@ -210,7 +210,7 @@ func SetKubeletExtraConfigDefaults(ng *NodeGroup, meta *ClusterMeta) error {
 	return nil
 }
 
-func setCpuReservationsDefaults(ng *NodeGroup, rscType string, meta *ClusterMeta, getFn getRscDefaultFunc) error {
+func setCPUReservationDefaults(ng *NodeGroup, rscType string, meta *ClusterMeta, getFn getRscDefaultFunc) error {
 	return setReservationDefault(ng, rscType, meta, getFn)
 }
 
@@ -249,11 +249,6 @@ func getKubeReserved(kec InlineDocument) map[string]interface{} {
 	return kubeReserved
 }
 
-type cpuEntry struct {
-	cores int64
-	res   string
-}
-
 // See: https://docs.microsoft.com/en-us/azure/aks/concepts-clusters-workloads
 var cpuAllocations map[int64]string = map[int64]string{
 	1:  "60m",
@@ -267,15 +262,14 @@ var cpuAllocations map[int64]string = map[int64]string{
 	96: "1040m", //+320
 }
 
-func getCpuReservations(it string, meta *ClusterMeta) (string, error) {
+func getCPUReservations(it string, meta *ClusterMeta) (string, error) {
 	cores, err := getInstanceTypeCores(it, meta)
 	if err != nil {
 		return "", err
 	}
 
-	reservedCores := "0"
-	ok := false
-	if reservedCores, ok = cpuAllocations[cores]; !ok {
+	reservedCores, ok := cpuAllocations[cores]
+	if !ok {
 		err = fmt.Errorf("Could not find suggested core reservation for instance type: %s\n", it)
 	}
 	if err != nil {
@@ -289,8 +283,8 @@ func getInstanceTypeCores(it string, meta *ClusterMeta) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	vCpuInfo := (*instTypeInfos).VCpuInfo
-	cpuCores := *vCpuInfo.DefaultVCpus
+	vCPUInfo := (*instTypeInfos).VCpuInfo
+	cpuCores := *vCPUInfo.DefaultVCpus
 	return cpuCores, nil
 }
 
@@ -423,7 +417,7 @@ func getRegion(meta *ClusterMeta) string {
 
 func getSession(meta *ClusterMeta) (*session.Session, error) {
 	region := getRegion(meta)
-	var sess *session.Session = nil
+	var sess *session.Session
 	if region != "" {
 		sess = session.Must(session.NewSession(
 			&aws.Config{
